@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5; /* Light gray background color */
+        }
+
+        .task-column {
+            min-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .task-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .task-card h5 {
+            font-size: 1.25rem;
+            color: #007bff;
+        }
+
+        .task-card p {
+            font-size: 1rem;
+            color: #555;
+        }
+
+        .task-card small {
+            font-size: 0.875rem;
+            color: #777;
+        }
+
+        .task-card .btn {
+            margin-top: 10px;
+        }
+
+        .task-form .form-control {
+            margin-bottom: 15px;
+        }
+
+        .task-form button {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .task-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .task-form .card-body {
+            padding: 30px;
+        }
+
+        .task-card .priority {
+            font-weight: bold;
+        }
+
+        .task-card .priority.low {
+            color: green;
+        }
+
+        .task-card .priority.medium {
+            color: orange;
+        }
+
+        .task-card .priority.high {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Task Management Dashboard</h2>
+
+    <!-- Task Creation Form -->
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow-sm task-form">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-4">Create a Task</h5>
+                    <form id="taskForm">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="taskTitle" placeholder="Task Title" required>
+                        </div>
+                        <div class="form-group">
+                            <textarea class="form-control" id="taskDescription" rows="3" placeholder="Task Description" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="taskAssignedTo" placeholder="Assigned To" required>
+                        </div>
+                        <div class="form-group">
+                            <select class="form-control" id="taskPriority">
+                                <option value="low">Low Priority</option>
+                                <option value="medium">Medium Priority</option>
+                                <option value="high">High Priority</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <input type="date" class="form-control" id="taskDeadline" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Add Task</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Columns -->
+    <div class="row mt-5">
+        <!-- To Do Column -->
+        <div class="col-md-4">
+            <div class="task-column" id="toDoColumn">
+                <h4>To Do</h4>
+            </div>
+        </div>
+
+        <!-- In Progress Column -->
+        <div class="col-md-4">
+            <div class="task-column" id="inProgressColumn">
+                <h4>In Progress</h4>
+            </div>
+        </div>
+
+        <!-- Done Column -->
+        <div class="col-md-4">
+            <div class="task-column" id="doneColumn">
+                <h4>Done</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS and jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    // Task creation function with priority and deadline
+    function createTask(title, description, assignedTo, priority, deadline) {
+        const taskCard = document.createElement("div");
+        taskCard.classList.add("task-card");
+
+        taskCard.innerHTML = `
+            <h5>${title}</h5>
+            <p>${description}</p>
+            <small>Assigned to: ${assignedTo}</small>
+            <div class="priority ${priority}">${priority.charAt(0).toUpperCase() + priority.slice(1)} Priority</div>
+            <small>Deadline: ${deadline}</small>
+            <div class="mt-2">
+                <button class="btn btn-sm btn-warning" onclick="moveTask(this, 'inProgress')">Move to In Progress</button>
+                <button class="btn btn-sm btn-success" onclick="moveTask(this, 'done')">Move to Done</button>
+                <button class="btn btn-sm btn-danger" onclick="removeTask(this)">Remove</button>
+                <button class="btn btn-sm btn-info" onclick="editTask(this)">Edit</button>
+            </div>
+        `;
+
+        return taskCard;
+    }
+
+    // Edit task function
+    function editTask(button) {
+        const taskCard = button.parentElement.parentElement;
+        const title = taskCard.querySelector('h5').textContent;
+        const description = taskCard.querySelector('p').textContent;
+        const assignedTo = taskCard.querySelector('small').textContent.replace('Assigned to: ', '');
+        const priority = taskCard.querySelector('.priority').textContent.toLowerCase().replace(' priority', '');
+        const deadline = taskCard.querySelectorAll('small')[1].textContent.replace('Deadline: ', '');
+
+        document.getElementById("taskTitle").value = title;
+        document.getElementById("taskDescription").value = description;
+        document.getElementById("taskAssignedTo").value = assignedTo;
+        document.getElementById("taskPriority").value = priority;
+        document.getElementById("taskDeadline").value = deadline;
+
+        // Remove task card after editing
+        taskCard.remove();
+    }
+
+    // Move task to another column
+    function moveTask(button, column) {
+        const taskCard = button.parentElement.parentElement;
+        const targetColumn = document.getElementById(`${column}Column`);
+
+        // Remove task from current column and add it to target column
+        taskCard.querySelectorAll('button').forEach(btn => {
+            btn.style.display = "none"; // Hide the buttons after moving task
+        });
+        targetColumn.appendChild(taskCard);
+    }
+
+    // Remove task from column
+    function removeTask(button) {
+        const taskCard = button.parentElement.parentElement;
+        taskCard.remove(); // Remove the task card from the column
+    }
+
+    // Form submission and task creation
+    document.getElementById("taskForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const title = document.getElementById("taskTitle").value;
+        const description = document.getElementById("taskDescription").value;
+        const assignedTo = document.getElementById("taskAssignedTo").value;
+        const priority = document.getElementById("taskPriority").value;
+        const deadline = document.getElementById("taskDeadline").value;
+
+        // Create a new task and add it to the "To Do" column
+        const newTask = createTask(title, description, assignedTo, priority, deadline);
+        document.getElementById("toDoColumn").appendChild(newTask);
+
+        // Clear the form fields
+        document.getElementById("taskTitle").value = "";
+        document.getElementById("taskDescription").value = "";
+        document.getElementById("taskAssignedTo").value = "";
+        document.getElementById("taskPriority").value = "low";
+        document.getElementById("taskDeadline").value = "";
+    });
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
